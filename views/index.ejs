@@ -5,21 +5,121 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bulk Mailer</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg">
+<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen py-10">
+  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-4xl">
     <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">📧 Bulk Mailer</h1>
-    <form action="/send-emails" method="post" enctype="multipart/form-data" class="space-y-6">
+    <form id="bulkMailerForm" action="/send-emails" method="post" enctype="multipart/form-data" class="space-y-6">
       <div>
         <label class="block text-gray-700 font-medium mb-2">Upload Excel File</label>
-        <input type="file" name="file" required
+        <input type="file" name="file" id="excelFile" required
                class="w-full border-2 border-dashed border-gray-300 rounded-lg p-3 focus:ring focus:ring-blue-300 focus:outline-none">
       </div>
+      <div id="errorMsg" class="text-red-500 font-medium"></div>
       <button type="submit"
               class="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
         🚀 Send Emails
       </button>
     </form>
+
+    <!-- Preview Table -->
+    <div id="previewContainer" class="mt-8 overflow-x-auto hidden">
+      <h2 class="text-xl font-semibold mb-4">Preview</h2>
+      <table class="min-w-full border border-gray-300 text-left">
+        <thead class="bg-gray-200">
+          <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
+
+  <script>
+    const form = document.getElementById('bulkMailerForm');
+    const fileInput = document.getElementById('excelFile');
+    const errorMsg = document.getElementById('errorMsg');
+    const previewContainer = document.getElementById('previewContainer');
+    const tableHeader = document.getElementById('tableHeader');
+    const tableBody = document.getElementById('tableBody');
+
+    let excelData = []; // Store parsed data
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        excelData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (excelData.length === 0) {
+          errorMsg.textContent = "The Excel file is empty.";
+          previewContainer.classList.add('hidden');
+          return;
+        }
+
+        const requiredColumns = ['Email', 'Name', 'Marks'];
+        const missingColumns = requiredColumns.filter(col => !Object.keys(excelData[0]).includes(col));
+
+        if (missingColumns.length > 0) {
+          errorMsg.textContent = `Missing columns: ${missingColumns.join(', ')}`;
+          previewContainer.classList.add('hidden');
+          return;
+        }
+
+        errorMsg.textContent = "";
+        renderPreviewTable(excelData, requiredColumns);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function renderPreviewTable(data, requiredColumns) {
+      previewContainer.classList.remove('hidden');
+
+      // Clear previous table
+      tableHeader.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      // Render header
+      Object.keys(data[0]).forEach(key => {
+        const th = document.createElement('th');
+        th.textContent = key;
+        th.className = "border px-4 py-2";
+        tableHeader.appendChild(th);
+      });
+
+      // Render rows
+      data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        Object.keys(row).forEach(key => {
+          const td = document.createElement('td');
+          td.textContent = row[key];
+          td.className = "border px-4 py-2";
+
+          // Highlight missing required fields
+          if (requiredColumns.includes(key) && !row[key]) {
+            td.classList.add('bg-red-200');
+          }
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Optional: prevent form submission if any required field is empty
+    form.addEventListener('submit', (e) => {
+      const requiredColumns = ['Email', 'Name', 'Marks'];
+      const hasEmpty = excelData.some(row => requiredColumns.some(col => !row[col]));
+      if (hasEmpty) {
+        e.preventDefault();
+        errorMsg.textContent = "Please fill all required fields in the Excel file.";
+      }
+    });
+  </script>
 </body>
 </html>
