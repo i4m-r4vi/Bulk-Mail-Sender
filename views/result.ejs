@@ -1,41 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bulk Mail Results</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Mail Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">📊 Email Sending Results</h1>
-    <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-        <thead class="bg-gray-100 text-gray-700">
-          <tr>
-            <th class="py-3 px-4 text-left">Name</th>
-            <th class="py-3 px-4 text-left">Email</th>
-            <th class="py-3 px-4 text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% results.forEach(r => { %>
-            <tr class="border-b hover:bg-gray-50">
-              <td class="py-3 px-4"><%= r.name %></td>
-              <td class="py-3 px-4"><%= r.email %></td>
-              <td class="py-3 px-4 font-semibold <%= r.status.includes('✅') ? 'text-green-600' : 'text-red-600' %>">
-                <%= r.status %>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">📊 Email Sending Results</h1>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th class="py-3 px-4 text-left">Name</th>
+                        <th class="py-3 px-4 text-left">Email</th>
+                        <th class="py-3 px-4 text-left">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% results.forEach(r=> { %>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 px-4">
+                                <%= r.name %>
+                            </td>
+                            <td class="py-3 px-4">
+                                <%= r.email %>
+                            </td>
+                            <td
+                                class="py-3 px-4 font-semibold <%= r.status.includes('✅') ? 'text-green-600' : 'text-red-600' %>">
+                                <%= r.status %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+            <a href="/"
+                class="bg-blue-600 text-white py-2 px-6 rounded-lg shadow hover:bg-blue-700 transition duration-200 text-center">
+                ⬅ Upload Another File
+            </a>
+
+            <% if (downloadFile) { %>
+                <a href="/download/<%= downloadFile.split('/').pop() %>"
+                    class="bg-green-600 text-white py-2 px-6 rounded-lg shadow hover:bg-green-700 transition duration-200 text-center">
+                    ⬇ Download Sent Emails (Excel)
+                </a>
+                <% } %>
+        </div>
     </div>
-    <div class="mt-6 text-center">
-      <a href="/" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg shadow hover:bg-blue-700 transition duration-200">
-        ⬅ Upload Another File
-      </a>
-    </div>
-  </div>
 </body>
+
 </html>
